@@ -94,6 +94,7 @@ local ToggleESP = Tab:CreateToggle({
             createESP(LocalPlayer)  -- Apply ESP to the local player's character
         end
 
+        -- Update ESP colors based on weapon type (gun = blue, knife = red, none = white)
         local function updateESPColors()
             for _, player in pairs(Players:GetPlayers()) do
                 if player.Character then
