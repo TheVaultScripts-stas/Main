@@ -21,7 +21,7 @@ local Window = Rayfield:CreateWindow({
    KeySystem = false
 })
 
-local Tab = Window:CreateTab("ESP & Tracers", 4483362458)
+local Tab = Window:CreateTab("ESP", 4483362458)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -186,7 +186,7 @@ end
 Players.PlayerAdded:Connect(onPlayerAdded)
 
 Tab:CreateToggle({
-    Name = "ESP & Tracers",
+    Name = "Player ESP",
     CurrentValue = false,
     Flag = "ESP_Tracer_Combo",
     Callback = function(value)
