@@ -4,7 +4,7 @@ local Window = Rayfield:CreateWindow({
    Name = "Murder Mystrery 2",
    Icon = 0,
    LoadingTitle = "The Vault Scripts",
-   LoadingSubtitle = "by stas()",
+   LoadingSubtitle = "by Stas() and looly",
    Theme = "Default",
 
    DisableRayfieldPrompts = false,
