@@ -35,6 +35,7 @@ local Window = Rayfield:CreateWindow({
 })
 
 local Tab = Window:CreateTab("ESP", 4483362458)
+local mainTab = Window:CreateTab("Main", 4483362458)
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
@@ -370,6 +371,120 @@ local toggleBoxESP = Tab:CreateToggle({
             for _, box in pairs(boxes) do
                 box.Visible = false
             end
+        end
+    end
+})
+
+local flyEnabled = false
+local flySpeed = 50
+local flyConnection = nil
+local flyKey = Enum.KeyCode.E
+local isFlying = false
+
+local player = game:GetService("Players").LocalPlayer
+
+local function ToggleFly()
+    flyEnabled = not flyEnabled
+    isFlying = flyEnabled -- Update isFlying state
+    local character = player.Character
+    if not character then return end
+    
+    if flyConnection then
+        flyConnection:Disconnect()
+        flyConnection = nil
+    end
+    
+    local hum = character:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    
+    if flyEnabled then
+        local gravityConnection = workspace:GetPropertyChangedSignal("Gravity"):Connect(function() end)
+        local originalGravity = workspace.Gravity
+        
+        hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, false)
+        hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, false)
+        hum:ChangeState(Enum.HumanoidStateType.Swimming)
+        
+        flyConnection = game:GetService("RunService").RenderStepped:Connect(function()
+            if not character or not character:FindFirstChild("HumanoidRootPart") then 
+                if flyConnection then 
+                    flyConnection:Disconnect()
+                    flyConnection = nil
+                end
+                if gravityConnection then
+                    gravityConnection:Disconnect()
+                    workspace.Gravity = originalGravity
+                end
+                return 
+            end
+            
+            local hrp = character.HumanoidRootPart
+            local cam = workspace.CurrentCamera
+            local UIS = game:GetService("UserInputService")
+            
+            local chatActive = game:GetService("Players").LocalPlayer.PlayerGui:FindFirstChild("Chat") and 
+                             game:GetService("Players").LocalPlayer.PlayerGui.Chat.Frame.ChatBarParentFrame.Frame.BoxFrame.Frame.ChatBar:IsFocused()
+            
+            local textboxFocused = UIS:GetFocusedTextBox() ~= nil
+            
+            local moveDirection = Vector3.new()
+            
+            -- Only process movement if chat/textbox isn't active
+            if not chatActive and not textboxFocused then
+                if UIS:IsKeyDown(Enum.KeyCode.W) then
+                    moveDirection = moveDirection + cam.CFrame.LookVector
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.S) then
+                    moveDirection = moveDirection - cam.CFrame.LookVector
+                end
+                
+                if UIS:IsKeyDown(Enum.KeyCode.D) then
+                    moveDirection = moveDirection + cam.CFrame.RightVector
+                end
+                if UIS:IsKeyDown(Enum.KeyCode.A) then
+                    moveDirection = moveDirection - cam.CFrame.RightVector
+                end
+                
+                if UIS:IsKeyDown(Enum.KeyCode.Space) then
+                    moveDirection = moveDirection + Vector3.new(0, 1, 0)
+                end
+            end
+            
+            if moveDirection.Magnitude > 0 then
+                moveDirection = moveDirection.Unit * flySpeed
+                hrp.Velocity = moveDirection
+            else
+                hrp.Velocity = Vector3.new(0, 0, 0)
+            end
+            
+            workspace.Gravity = 0
+        end)
+    else
+        if hum then
+            workspace.Gravity = 196.2
+            hum:SetStateEnabled(Enum.HumanoidStateType.Climbing, true)
+            hum:SetStateEnabled(Enum.HumanoidStateType.GettingUp, true)
+            hum:ChangeState(Enum.HumanoidStateType.Landed)
+            isFlying = false -- Update isFlying state when disabled
+        end
+    end
+end
+
+local UIS = game:GetService("UserInputService")
+UIS.InputBegan:Connect(function(input, gameProcessed)
+    if not gameProcessed and input.KeyCode == flyKey then
+        ToggleFly()
+    end
+end)
+
+-- This would be part of your UI creation code (Rayfield in this case)
+mainTab:CreateToggle({
+    Name = "Flight (Press E)",
+    CurrentValue = false,
+    Callback = function(state)
+        flyEnabled = state
+        if state ~= isFlying then
+            ToggleFly()
         end
     end
 })
